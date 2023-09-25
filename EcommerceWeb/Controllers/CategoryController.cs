@@ -14,7 +14,7 @@ namespace EcommerceWeb.Controllers
 
         public IActionResult Index()
         {
-            var categories = _context.Categories.ToList();
+            var categories = _context.Categories.OrderBy(c => c.DisplayOrder).ToList();
             return View(categories);
         }
     }
