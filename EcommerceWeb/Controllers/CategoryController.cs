@@ -41,7 +41,7 @@ namespace EcommerceWeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Edit(int? id)
+        public IActionResult Edit([FromRoute] int? id)
         {
             if (id is null)
                 return BadRequest();
@@ -75,5 +75,34 @@ namespace EcommerceWeb.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
+		public IActionResult Delete([FromRoute] int? id)
+		{
+			if (id is null)
+				return BadRequest();
+
+			var categoryFromDb = _context.Categories.Find(id);
+
+			if (categoryFromDb is null)
+				return NotFound();
+
+			return View(categoryFromDb);
+		}
+        [HttpPost, ActionName("Delete")]
+		[ValidateAntiForgeryToken]
+		public IActionResult DeletePOST([FromForm] int? id)
+		{
+			if (id is null)
+				return BadRequest();
+
+			var categoryToDelete = _context.Categories.Find(id);
+
+			if (categoryToDelete is null)
+				return NotFound();
+
+            _context.Categories.Remove(categoryToDelete);
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(Index));
+		}
 	}
 }
