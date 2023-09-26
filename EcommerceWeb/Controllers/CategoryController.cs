@@ -26,10 +26,16 @@ namespace EcommerceWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public IActionResult Create([FromForm] Category category)
         {
+            if (category.Name == category.DisplayOrder.ToString())
+            {
+                ModelState.AddModelError("Name", "Display Order cannot exactly match the Name.");
+            }
+
 			if (!ModelState.IsValid)
 			{
 				return View("Create", category);
 			}
+
 			_context.Categories.Add(category);
             _context.SaveChanges();
             return RedirectToAction(nameof(Index));
