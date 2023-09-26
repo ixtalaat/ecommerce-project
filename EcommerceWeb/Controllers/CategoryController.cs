@@ -38,6 +38,9 @@ namespace EcommerceWeb.Controllers
 
 			_context.Categories.Add(category);
             _context.SaveChanges();
+
+            TempData["success"] = "Category created Successfully";
+
             return RedirectToAction(nameof(Index));
         }
 
@@ -70,8 +73,11 @@ namespace EcommerceWeb.Controllers
 
             categoryToUpdate.Name = category.Name;
             categoryToUpdate.DisplayOrder = category.DisplayOrder;
+            
+            _context.SaveChanges();
 
-			_context.SaveChanges();
+			TempData["success"] = "Category updated Successfully";
+
 			return RedirectToAction(nameof(Index));
 		}
 
@@ -102,7 +108,9 @@ namespace EcommerceWeb.Controllers
             _context.Categories.Remove(categoryToDelete);
             _context.SaveChanges();
 
-            return RedirectToAction(nameof(Index));
+			TempData["success"] = "Category deleted Successfully";
+
+			return RedirectToAction(nameof(Index));
 		}
 	}
 }
