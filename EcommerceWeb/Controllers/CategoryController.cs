@@ -23,9 +23,14 @@ namespace EcommerceWeb.Controllers
             return View();
         }
         [HttpPost]
-        public IActionResult Create([FromForm] Category category)
+		[ValidateAntiForgeryToken]
+		public IActionResult Create([FromForm] Category category)
         {
-            _context.Categories.Add(category);
+			if (!ModelState.IsValid)
+			{
+				return View("Create", category);
+			}
+			_context.Categories.Add(category);
             _context.SaveChanges();
             return RedirectToAction(nameof(Index));
         }
