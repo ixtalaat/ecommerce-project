@@ -41,5 +41,39 @@ namespace EcommerceWeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-    }
+        public IActionResult Edit(int? id)
+        {
+            if (id is null)
+                return BadRequest();
+
+            var categoryFromDb = _context.Categories.Find(id);
+
+            if (categoryFromDb is null)
+                return NotFound();
+
+            return View(categoryFromDb);
+        }
+
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public IActionResult Edit([FromForm] Category category)
+		{
+			if (!ModelState.IsValid)
+			{
+				return View("Create", category);
+			}
+
+			var categoryToUpdate = _context.Categories.Find(category.Id);
+
+            if (categoryToUpdate is null)
+                return NotFound();
+
+            categoryToUpdate.Name = category.Name;
+            categoryToUpdate.DisplayOrder = category.DisplayOrder;
+
+			_context.SaveChanges();
+			return RedirectToAction(nameof(Index));
+		}
+
+	}
 }
