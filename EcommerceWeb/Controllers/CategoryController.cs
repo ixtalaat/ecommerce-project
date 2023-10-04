@@ -63,13 +63,7 @@ namespace EcommerceWeb.Controllers
 				return View("Create", category);
 			}
 
-			var categoryToUpdate = _categoryRepository.Get(c => c.Id == category.Id);
-
-
-            if (categoryToUpdate is null)
-                return NotFound();
-
-            _categoryRepository.Update(categoryToUpdate);
+            _categoryRepository.Update(category);
             _categoryRepository.Save();
 
 			TempData["success"] = "Category updated Successfully";
