@@ -1,4 +1,5 @@
 ﻿using Ecommerce.DataAccess.Data;
+using Ecommerce.DataAccess.IRepository;
 using Ecommerce.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,16 +7,16 @@ namespace EcommerceWeb.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICategoryRepository _categoryRepository;
 
-        public CategoryController(ApplicationDbContext context)
+        public CategoryController(ICategoryRepository categoryRepository)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _categoryRepository = categoryRepository ?? throw new ArgumentNullException(nameof(categoryRepository));
         }
 
         public IActionResult Index()
         {
-            var categories = _context.Categories.OrderBy(c => c.DisplayOrder).ToList();
+            var categories = _categoryRepository.GetAll();
             return View(categories);
         }
         public IActionResult Create()
@@ -26,18 +27,13 @@ namespace EcommerceWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public IActionResult Create([FromForm] Category category)
         {
-            //if (category.Name == category.DisplayOrder.ToString())
-            //{
-            //    ModelState.AddModelError("Name", "Display Order cannot exactly match the Name.");
-            //}
-
 			if (!ModelState.IsValid)
 			{
 				return View("Create", category);
 			}
 
-			_context.Categories.Add(category);
-            _context.SaveChanges();
+            _categoryRepository.Add(category);
+            _categoryRepository.Save();
 
             TempData["success"] = "Category created Successfully";
 
@@ -49,7 +45,8 @@ namespace EcommerceWeb.Controllers
             if (id is null)
                 return BadRequest();
 
-            var categoryFromDb = _context.Categories.Find(id);
+            //var categoryFromDb = _context.Categories.Find(id);
+            var categoryFromDb = _categoryRepository.Get(c => c.Id == id);
 
             if (categoryFromDb is null)
                 return NotFound();
@@ -66,15 +63,14 @@ namespace EcommerceWeb.Controllers
 				return View("Create", category);
 			}
 
-			var categoryToUpdate = _context.Categories.Find(category.Id);
+			var categoryToUpdate = _categoryRepository.Get(c => c.Id == category.Id);
+
 
             if (categoryToUpdate is null)
                 return NotFound();
 
-            categoryToUpdate.Name = category.Name;
-            categoryToUpdate.DisplayOrder = category.DisplayOrder;
-            
-            _context.SaveChanges();
+            _categoryRepository.Update(categoryToUpdate);
+            _categoryRepository.Save();
 
 			TempData["success"] = "Category updated Successfully";
 
@@ -86,9 +82,10 @@ namespace EcommerceWeb.Controllers
 			if (id is null)
 				return BadRequest();
 
-			var categoryFromDb = _context.Categories.Find(id);
+            var categoryFromDb = _categoryRepository.Get(c => c.Id == id);
 
-			if (categoryFromDb is null)
+
+            if (categoryFromDb is null)
 				return NotFound();
 
 			return View(categoryFromDb);
@@ -96,17 +93,18 @@ namespace EcommerceWeb.Controllers
         [HttpPost, ActionName("Delete")]
 		[ValidateAntiForgeryToken]
 		public IActionResult DeletePOST([FromForm] int? id)
-		{
+		{   
 			if (id is null)
 				return BadRequest();
 
-			var categoryToDelete = _context.Categories.Find(id);
+            var categoryToDelete = _categoryRepository.Get(c => c.Id == id);
 
-			if (categoryToDelete is null)
-				return NotFound();
 
-            _context.Categories.Remove(categoryToDelete);
-            _context.SaveChanges();
+            if (categoryToDelete is null)
+                return NotFound();
+
+            _categoryRepository.Remove(categoryToDelete);
+            _categoryRepository.Save();
 
 			TempData["success"] = "Category deleted Successfully";
 

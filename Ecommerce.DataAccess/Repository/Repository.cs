@@ -28,11 +28,9 @@ namespace Ecommerce.DataAccess.Repository
         {
             dbSet.Add(entity);
         }
-        public void Remove(int id)
+        public void Remove(T entity)
         {
-            var entityToRemove = _context.Set<T>().Find(id);
-            if (entityToRemove is not null)
-                dbSet.Remove(entityToRemove);
+            dbSet.Remove(entity);
         }
 
         public void RemoveRange(IEnumerable<T> entities)

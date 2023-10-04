@@ -8,7 +8,7 @@ namespace Ecommerce.DataAccess.IRepository
         IEnumerable<T> GetAll();
         T Get(Expression<Func<T, bool>> filter);
         void Add(T entity);
-        void Remove(int id);
+        void Remove(T entity);
         void RemoveRange(IEnumerable<T> entities);
     }
 }
