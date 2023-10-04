@@ -17,10 +17,6 @@ namespace Ecommerce.DataAccess.Repository
         {
             _context.Categories.Update(obj);
         }
-        public void Save()
-        {
-            _context.SaveChanges();
-        }
-
+       
     }
 }
