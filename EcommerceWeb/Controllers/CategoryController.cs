@@ -1,5 +1,4 @@
-﻿using Ecommerce.DataAccess.Data;
-using Ecommerce.DataAccess.IRepository;
+﻿using Ecommerce.DataAccess.IRepository;
 using Ecommerce.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,16 +6,16 @@ namespace EcommerceWeb.Controllers
 {
     public class CategoryController : Controller
     {
-        private readonly ICategoryRepository _categoryRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public CategoryController(ICategoryRepository categoryRepository)
+        public CategoryController(IUnitOfWork unitOfWork)
         {
-            _categoryRepository = categoryRepository ?? throw new ArgumentNullException(nameof(categoryRepository));
+            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         }
 
         public IActionResult Index()
         {
-            var categories = _categoryRepository.GetAll();
+            var categories = _unitOfWork.CategoryRepository.GetAll();
             return View(categories);
         }
         public IActionResult Create()
@@ -32,8 +31,8 @@ namespace EcommerceWeb.Controllers
 				return View("Create", category);
 			}
 
-            _categoryRepository.Add(category);
-            _categoryRepository.Save();
+            _unitOfWork.CategoryRepository.Add(category);
+            _unitOfWork.Save();
 
             TempData["success"] = "Category created Successfully";
 
@@ -45,8 +44,7 @@ namespace EcommerceWeb.Controllers
             if (id is null)
                 return BadRequest();
 
-            //var categoryFromDb = _context.Categories.Find(id);
-            var categoryFromDb = _categoryRepository.Get(c => c.Id == id);
+            var categoryFromDb = _unitOfWork.CategoryRepository.Get(c => c.Id == id);
 
             if (categoryFromDb is null)
                 return NotFound();
@@ -63,8 +61,8 @@ namespace EcommerceWeb.Controllers
 				return View("Create", category);
 			}
 
-            _categoryRepository.Update(category);
-            _categoryRepository.Save();
+            _unitOfWork.CategoryRepository.Update(category);
+            _unitOfWork.Save();
 
 			TempData["success"] = "Category updated Successfully";
 
@@ -76,7 +74,7 @@ namespace EcommerceWeb.Controllers
 			if (id is null)
 				return BadRequest();
 
-            var categoryFromDb = _categoryRepository.Get(c => c.Id == id);
+            var categoryFromDb = _unitOfWork.CategoryRepository.Get(c => c.Id == id);
 
 
             if (categoryFromDb is null)
@@ -91,14 +89,14 @@ namespace EcommerceWeb.Controllers
 			if (id is null)
 				return BadRequest();
 
-            var categoryToDelete = _categoryRepository.Get(c => c.Id == id);
+            var categoryToDelete = _unitOfWork.CategoryRepository.Get(c => c.Id == id);
 
 
             if (categoryToDelete is null)
                 return NotFound();
 
-            _categoryRepository.Remove(categoryToDelete);
-            _categoryRepository.Save();
+            _unitOfWork.CategoryRepository.Remove(categoryToDelete);
+            _unitOfWork.Save();
 
 			TempData["success"] = "Category deleted Successfully";
 
