@@ -28,7 +28,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
                 Text = c.Name,
                 Value = c.Id.ToString()
             });
-            ViewBag.CategoryList = CategoryList;
+            ViewData["CategoryList"] = CategoryList;
             return View();
         }
         [HttpPost]
