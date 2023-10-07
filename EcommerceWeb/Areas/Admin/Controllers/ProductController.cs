@@ -22,7 +22,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             
             return View(products);
         }
-        public IActionResult Create()
+        public IActionResult Upsert(int? id)
         {
             ProductViewModel productViewModel = new()
             {
@@ -33,12 +33,21 @@ namespace EcommerceWeb.Areas.Admin.Controllers
                     Value = c.Id.ToString()
                 })
             };
-
-            return View(productViewModel);
+            if(id is null)
+            {
+                //Create
+                return View(productViewModel);
+            }
+            else
+            {
+                //Update
+                productViewModel.Product = _unitOfWork.ProductRepository.Get(c => c.Id == id);
+                return View(productViewModel);
+            }
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([FromForm] ProductViewModel productViewModel)
+        public IActionResult Upsert([FromForm] ProductViewModel productViewModel, IFormFile? file)
         {
             if (!ModelState.IsValid)
             {
@@ -54,36 +63,6 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             _unitOfWork.Save();
 
             TempData["success"] = "Product created Successfully";
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        public IActionResult Edit([FromRoute] int? id)
-        {
-            if (id is null)
-                return BadRequest();
-
-            var productFromDb = _unitOfWork.ProductRepository.Get(c => c.Id == id);
-
-            if (productFromDb is null)
-                return NotFound();
-
-            return View(productFromDb);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Edit([FromForm] Product product)
-        {
-            if (!ModelState.IsValid)
-            {
-                return View("Create", product);
-            }
-
-            _unitOfWork.ProductRepository.Update(product);
-            _unitOfWork.Save();
-
-            TempData["success"] = "Product updated Successfully";
 
             return RedirectToAction(nameof(Index));
         }
