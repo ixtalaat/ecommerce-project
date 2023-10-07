@@ -1,5 +1,6 @@
 ﻿using Ecommerce.DataAccess.IRepository;
 using Ecommerce.Models;
+using Ecommerce.Models.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -23,24 +24,33 @@ namespace EcommerceWeb.Areas.Admin.Controllers
         }
         public IActionResult Create()
         {
-            IEnumerable<SelectListItem> CategoryList = _unitOfWork.CategoryRepository.GetAll().Select(c => new SelectListItem()
+            ProductViewModel productViewModel = new()
             {
-                Text = c.Name,
-                Value = c.Id.ToString()
-            });
-            ViewData["CategoryList"] = CategoryList;
-            return View();
+                Product = new Product(),
+                CategoryList = _unitOfWork.CategoryRepository.GetAll().Select(c => new SelectListItem()
+                {
+                    Text = c.Name,
+                    Value = c.Id.ToString()
+                })
+            };
+
+            return View(productViewModel);
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create([FromForm] Product product)
+        public IActionResult Create([FromForm] ProductViewModel productViewModel)
         {
             if (!ModelState.IsValid)
             {
-                return View("Create", product);
+                productViewModel.CategoryList = _unitOfWork.CategoryRepository.GetAll().Select(c => new SelectListItem()
+                {
+                    Text = c.Name,
+                    Value = c.Id.ToString()
+                });
+                return View("Create", productViewModel);
             }
 
-            _unitOfWork.ProductRepository.Add(product);
+            _unitOfWork.ProductRepository.Add(productViewModel.Product);
             _unitOfWork.Save();
 
             TempData["success"] = "Product created Successfully";
