@@ -15,7 +15,9 @@
     <div class="card-body p-4">
         <form method="post" class="row" enctype="multipart/form-data">
             <input asp-for="Product.Id" hidden />
-            <div class="border p-3">
+            <div class="row">
+                <div class="col-10">
+                    <div class="border p-3">
                 @*<div asp-validation-summary="ModelOnly"></div>*@
                 <div class="form-floating py-2 col-12">
                     <input asp-for="Product.Title" class="form-control border-0 shadow" />
@@ -86,6 +88,11 @@
                             Back to List
                         </a>
                     </div>
+                </div>
+            </div>
+                </div>
+                <div class="col-2">
+                    <img src="@Model.Product.ImageUrl" style="width: 100%; border-radius: 5px; border: 1px solid #bbb9b9" />
                 </div>
             </div>
         </form>
