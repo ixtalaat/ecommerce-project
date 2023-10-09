@@ -10,10 +10,12 @@ namespace EcommerceWeb.Areas.Admin.Controllers
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public ProductController(IUnitOfWork unitOfWork)
+        public ProductController(IUnitOfWork unitOfWork, IWebHostEnvironment webHostEnvironment)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _webHostEnvironment = webHostEnvironment ?? throw new ArgumentNullException(nameof(webHostEnvironment));
         }
 
         public IActionResult Index()
@@ -57,6 +59,20 @@ namespace EcommerceWeb.Areas.Admin.Controllers
                     Value = c.Id.ToString()
                 });
                 return View("Create", productViewModel);
+            }
+
+            var wwwRoot = _webHostEnvironment.WebRootPath;
+            if (file is not null)
+            {
+                var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                var productPath = Path.Combine(wwwRoot, @"images\product");
+
+                using (FileStream fileStream = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
+                {
+                    file.CopyTo(fileStream);
+                }
+
+                productViewModel.Product.ImageUrl = @"\images\product\" + fileName;
             }
 
             _unitOfWork.ProductRepository.Add(productViewModel.Product);
