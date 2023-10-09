@@ -20,7 +20,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
 
         public IActionResult Index()
         {
-            var products = _unitOfWork.ProductRepository.GetAll();
+            var products = _unitOfWork.ProductRepository.GetAll(includeProperties:"Category");
             
             return View(products);
         }
