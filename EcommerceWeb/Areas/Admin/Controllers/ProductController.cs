@@ -133,5 +133,14 @@ namespace EcommerceWeb.Areas.Admin.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        #region API CALLS
+        [HttpGet]
+        public IActionResult GetAll()
+        {
+            var products = _unitOfWork.ProductRepository.GetAll(includeProperties: "Category");
+            return Json(new { data = products });
+        }
+        #endregion
     }
 }
