@@ -31,7 +31,7 @@ namespace Ecommerce.Models
         public double Price100 { get; set; }
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
-        public Category Category { get; set; } = null!;
+        public Category? Category { get; set; }
         public string? ImageUrl { get; set; }
     }
 }
