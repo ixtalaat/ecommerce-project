@@ -108,6 +108,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             var products = _unitOfWork.ProductRepository.GetAll(includeProperties: "Category");
             return Json(new { data = products });
         }
+        [HttpDelete]
         public IActionResult Delete(int? id)
         {
             var productToDelete = _unitOfWork.ProductRepository.Get(c => c.Id == id);
