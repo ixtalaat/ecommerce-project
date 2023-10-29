@@ -8,12 +8,14 @@ namespace Ecommerce.DataAccess.Repository
         private readonly ApplicationDbContext _context;
         public ICategoryRepository CategoryRepository { get; private set; }
         public IProductRepository ProductRepository { get; private set; }
+        public ICompanyRepository CompanyRepository { get; private set; }
 
         public UnitOfWork(ApplicationDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             CategoryRepository = new CategoryRepository(context);
             ProductRepository = new ProductRepository(context);
+            CompanyRepository = new CompanyRepository(context);
         }
         public void Save()
         {
