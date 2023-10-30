@@ -9,6 +9,7 @@ namespace Ecommerce.DataAccess.Repository
         public ICategoryRepository CategoryRepository { get; private set; }
         public IProductRepository ProductRepository { get; private set; }
         public ICompanyRepository CompanyRepository { get; private set; }
+        public IShoppingCartRepository ShoppingCartRepository { get; private set; }
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -16,6 +17,7 @@ namespace Ecommerce.DataAccess.Repository
             CategoryRepository = new CategoryRepository(context);
             ProductRepository = new ProductRepository(context);
             CompanyRepository = new CompanyRepository(context);
+            ShoppingCartRepository = new ShoppingCartRepository(context);
         }
         public void Save()
         {
