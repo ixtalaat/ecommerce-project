@@ -51,6 +51,9 @@ namespace EcommerceWeb.Areas.Customer.Controllers
             {
                 _unitOfWork.ShoppingCartRepository.Add(shoppingCart);
             }
+
+            TempData["success"] = "Cart updated successfully";
+
             _unitOfWork.Save();
             return RedirectToAction(nameof(Index));
         }
