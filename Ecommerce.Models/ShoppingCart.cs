@@ -17,5 +17,6 @@ namespace Ecommerce.Models
         [ForeignKey("ApplicationUserId")]
         [ValidateNever]
         public ApplicationUser ApplicationUser { get; set; } = null!;
+        public double Price { get; set; }
     }
 }

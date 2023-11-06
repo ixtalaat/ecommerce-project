@@ -12,7 +12,7 @@ namespace EcommerceWeb.Areas.Customer.Controllers
     public class CartController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
-        public ShoppingCartViewModel ShoppingCartViewModel { get; set; }
+        public required ShoppingCartViewModel ShoppingCartViewModel { get; set; }
         public CartController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -23,15 +23,29 @@ namespace EcommerceWeb.Areas.Customer.Controllers
             var claimsIdentity = (ClaimsIdentity)User.Identity;
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
 
-            var shoppingCarts = _unitOfWork.ShoppingCartRepository.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product");
 
             ShoppingCartViewModel = new()
             {
-                ShoppingCartList = shoppingCarts,
-                OrderTotal = shoppingCarts.Sum(c => (c.Product.ListPrice * c.Count))
+                ShoppingCartList = _unitOfWork.ShoppingCartRepository.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product")
             };
-            
+
+            foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+            {
+                cart.Price = GetPriceBasedOnQuantity(cart);
+                ShoppingCartViewModel.OrderTotal += (cart.Price * cart.Count);
+            }
+
             return View(ShoppingCartViewModel);
+        }
+
+        private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
+        {
+            if (shoppingCart.Count <= 50)
+                return shoppingCart.Product.Price;
+            else if(shoppingCart.Count <= 100)
+                return shoppingCart.Product.Price50;
+            else
+                return shoppingCart.Product.Price100;
         }
     }
 }
