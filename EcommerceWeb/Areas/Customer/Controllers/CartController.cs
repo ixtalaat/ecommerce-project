@@ -26,7 +26,7 @@ namespace EcommerceWeb.Areas.Customer.Controllers
 
             ShoppingCartViewModel = new()
             {
-                ShoppingCartList = _unitOfWork.ShoppingCartRepository.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product")
+                ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product")
             };
 
             foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
@@ -40,31 +40,31 @@ namespace EcommerceWeb.Areas.Customer.Controllers
 
         public IActionResult Plus(int cartId)
         {
-            var cartFromDb = _unitOfWork.ShoppingCartRepository.Get(u => u.Id == cartId);
+            var cartFromDb = _unitOfWork.ShoppingCart.Get(u => u.Id == cartId);
             cartFromDb.Count += 1;
-            _unitOfWork.ShoppingCartRepository.Update(cartFromDb);
+            _unitOfWork.ShoppingCart.Update(cartFromDb);
             _unitOfWork.Save();
             return RedirectToAction(nameof(Index));
         }
         public IActionResult Minus(int cartId)
         {
-            var cartFromDb = _unitOfWork.ShoppingCartRepository.Get(s => s.Id == cartId);
+            var cartFromDb = _unitOfWork.ShoppingCart.Get(s => s.Id == cartId);
             if (cartFromDb.Count <= 1)
             {
-                _unitOfWork.ShoppingCartRepository.Remove(cartFromDb);
+                _unitOfWork.ShoppingCart.Remove(cartFromDb);
             }
             else
             {
                 cartFromDb.Count -= 1;
-                _unitOfWork.ShoppingCartRepository.Update(cartFromDb);
+                _unitOfWork.ShoppingCart.Update(cartFromDb);
             }
             _unitOfWork.Save();
             return RedirectToAction(nameof(Index));
         }
         public IActionResult Remove(int cartId)
         {
-            var cartFromDb = _unitOfWork.ShoppingCartRepository.Get(s => s.Id == cartId);
-            _unitOfWork.ShoppingCartRepository.Remove(cartFromDb);
+            var cartFromDb = _unitOfWork.ShoppingCart.Get(s => s.Id == cartId);
+            _unitOfWork.ShoppingCart.Remove(cartFromDb);
             _unitOfWork.Save();
             return RedirectToAction(nameof(Index));
         }

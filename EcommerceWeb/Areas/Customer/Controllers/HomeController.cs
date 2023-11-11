@@ -20,7 +20,7 @@ namespace EcommerceWeb.Areas.Customer.Controllers
 
         public IActionResult Index()
         {
-            var productsList = _unitOfWork.ProductRepository.GetAll(includeProperties: "Category");
+            var productsList = _unitOfWork.Product.GetAll(includeProperties: "Category");
             return View(productsList);
         }
 
@@ -28,7 +28,7 @@ namespace EcommerceWeb.Areas.Customer.Controllers
         {
             var cart = new ShoppingCart()
             {
-                Product = _unitOfWork.ProductRepository.Get(p => p.Id == productId, includeProperties: "Category"),
+                Product = _unitOfWork.Product.Get(p => p.Id == productId, includeProperties: "Category"),
                 Count = 1,
                 ProductId = productId
             };
@@ -42,14 +42,14 @@ namespace EcommerceWeb.Areas.Customer.Controllers
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
             shoppingCart.ApplicationUserId = userId;
 
-            var cartFromDb = _unitOfWork.ShoppingCartRepository.Get(c => c.ApplicationUserId == userId && c.ProductId == shoppingCart.ProductId);
+            var cartFromDb = _unitOfWork.ShoppingCart.Get(c => c.ApplicationUserId == userId && c.ProductId == shoppingCart.ProductId);
             if (cartFromDb is not null) {
                 cartFromDb.Count += shoppingCart.Count;
-                _unitOfWork.ShoppingCartRepository.Update(cartFromDb);
+                _unitOfWork.ShoppingCart.Update(cartFromDb);
             }
             else
             {
-                _unitOfWork.ShoppingCartRepository.Add(shoppingCart);
+                _unitOfWork.ShoppingCart.Add(shoppingCart);
             }
 
             TempData["success"] = "Cart updated successfully";

@@ -19,7 +19,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
 
         public IActionResult Index()
         {
-            var categories = _unitOfWork.CategoryRepository.GetAll();
+            var categories = _unitOfWork.Category.GetAll();
             return View(categories);
         }
         public IActionResult Create()
@@ -35,7 +35,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
                 return View("Create", category);
             }
 
-            _unitOfWork.CategoryRepository.Add(category);
+            _unitOfWork.Category.Add(category);
             _unitOfWork.Save();
 
             TempData["success"] = "Category created Successfully";
@@ -48,7 +48,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             if (id is null)
                 return BadRequest();
 
-            var categoryFromDb = _unitOfWork.CategoryRepository.Get(c => c.Id == id);
+            var categoryFromDb = _unitOfWork.Category.Get(c => c.Id == id);
 
             if (categoryFromDb is null)
                 return NotFound();
@@ -65,7 +65,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
                 return View("Create", category);
             }
 
-            _unitOfWork.CategoryRepository.Update(category);
+            _unitOfWork.Category.Update(category);
             _unitOfWork.Save();
 
             TempData["success"] = "Category updated Successfully";
@@ -78,7 +78,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             if (id is null)
                 return BadRequest();
 
-            var categoryFromDb = _unitOfWork.CategoryRepository.Get(c => c.Id == id);
+            var categoryFromDb = _unitOfWork.Category.Get(c => c.Id == id);
 
 
             if (categoryFromDb is null)
@@ -93,13 +93,13 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             if (id is null)
                 return BadRequest();
 
-            var categoryToDelete = _unitOfWork.CategoryRepository.Get(c => c.Id == id);
+            var categoryToDelete = _unitOfWork.Category.Get(c => c.Id == id);
 
 
             if (categoryToDelete is null)
                 return NotFound();
 
-            _unitOfWork.CategoryRepository.Remove(categoryToDelete);
+            _unitOfWork.Category.Remove(categoryToDelete);
             _unitOfWork.Save();
 
             TempData["success"] = "Category deleted Successfully";

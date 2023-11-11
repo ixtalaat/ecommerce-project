@@ -20,7 +20,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
 
         public IActionResult Index()
         {
-            var companies = _unitOfWork.CompanyRepository.GetAll();
+            var companies = _unitOfWork.Company.GetAll();
 
             return View(companies);
         }
@@ -34,7 +34,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             else
             {
                 //Update
-                var company = _unitOfWork.CompanyRepository.Get(c => c.Id == id);
+                var company = _unitOfWork.Company.Get(c => c.Id == id);
                 return View(company);
             }
         }
@@ -49,12 +49,12 @@ namespace EcommerceWeb.Areas.Admin.Controllers
 
             if (company.Id == 0)
             {
-                _unitOfWork.CompanyRepository.Add(company);
+                _unitOfWork.Company.Add(company);
 
             }
             else
             {
-                _unitOfWork.CompanyRepository.Update(company);
+                _unitOfWork.Company.Update(company);
             }
 
             _unitOfWork.Save();
@@ -67,19 +67,19 @@ namespace EcommerceWeb.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var companies = _unitOfWork.CompanyRepository.GetAll();
+            var companies = _unitOfWork.Company.GetAll();
             return Json(new { data = companies });
         }
         [HttpDelete]
         public IActionResult Delete(int? id)
         {
-            var companyToDelete = _unitOfWork.CompanyRepository.Get(c => c.Id == id);
+            var companyToDelete = _unitOfWork.Company.Get(c => c.Id == id);
             if (companyToDelete is null)
             {
                 return Json(new { success = false, message = "Error while deleting" });
             }
 
-            _unitOfWork.CompanyRepository.Remove(companyToDelete);
+            _unitOfWork.Company.Remove(companyToDelete);
             _unitOfWork.Save();
 
             return Json(new { success = true, message = "Delete Successful" });

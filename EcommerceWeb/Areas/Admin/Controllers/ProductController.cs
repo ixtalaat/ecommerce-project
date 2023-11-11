@@ -23,7 +23,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
 
         public IActionResult Index()
         {
-            var products = _unitOfWork.ProductRepository.GetAll(includeProperties:"Category");
+            var products = _unitOfWork.Product.GetAll(includeProperties:"Category");
             
             return View(products);
         }
@@ -32,7 +32,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             ProductViewModel productViewModel = new()
             {
                 Product = new Product(),
-                CategoryList = _unitOfWork.CategoryRepository.GetAll().Select(c => new SelectListItem()
+                CategoryList = _unitOfWork.Category.GetAll().Select(c => new SelectListItem()
                 {
                     Text = c.Name,
                     Value = c.Id.ToString()
@@ -46,7 +46,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             else
             {
                 //Update
-                productViewModel.Product = _unitOfWork.ProductRepository.Get(c => c.Id == id);
+                productViewModel.Product = _unitOfWork.Product.Get(c => c.Id == id);
                 return View(productViewModel);
             }
         }
@@ -56,7 +56,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
         {
             if (!ModelState.IsValid)
             {
-                productViewModel.CategoryList = _unitOfWork.CategoryRepository.GetAll().Select(c => new SelectListItem()
+                productViewModel.CategoryList = _unitOfWork.Category.GetAll().Select(c => new SelectListItem()
                 {
                     Text = c.Name,
                     Value = c.Id.ToString()
@@ -90,12 +90,12 @@ namespace EcommerceWeb.Areas.Admin.Controllers
 
             if (productViewModel.Product.Id == 0)
             {
-                _unitOfWork.ProductRepository.Add(productViewModel.Product);
+                _unitOfWork.Product.Add(productViewModel.Product);
 
             }
             else
             {
-                _unitOfWork.ProductRepository.Update(productViewModel.Product);
+                _unitOfWork.Product.Update(productViewModel.Product);
             }
 
             _unitOfWork.Save();
@@ -108,13 +108,13 @@ namespace EcommerceWeb.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            var products = _unitOfWork.ProductRepository.GetAll(includeProperties: "Category");
+            var products = _unitOfWork.Product.GetAll(includeProperties: "Category");
             return Json(new { data = products });
         }
         [HttpDelete]
         public IActionResult Delete(int? id)
         {
-            var productToDelete = _unitOfWork.ProductRepository.Get(c => c.Id == id);
+            var productToDelete = _unitOfWork.Product.Get(c => c.Id == id);
             if(productToDelete is null)
             {
                 return Json(new { success = false, message = "Error while deleting" });
@@ -126,7 +126,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
                 System.IO.File.Delete(oldImagePath);
             }
 
-            _unitOfWork.ProductRepository.Remove(productToDelete);
+            _unitOfWork.Product.Remove(productToDelete);
             _unitOfWork.Save();
 
             return Json(new { success = true, message = "Delete Successful" });
