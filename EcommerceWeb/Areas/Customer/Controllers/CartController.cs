@@ -72,7 +72,32 @@ namespace EcommerceWeb.Areas.Customer.Controllers
 
         public IActionResult Summary()
         {
-            return View();
+            var claimsIdentity = (ClaimsIdentity)User.Identity!;
+            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+
+
+            ShoppingCartViewModel = new()
+            {
+                ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product"),
+                OrderHeader = new()
+            };
+
+            ShoppingCartViewModel.OrderHeader.ApplicaitonUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
+
+            ShoppingCartViewModel.OrderHeader.Name = ShoppingCartViewModel.OrderHeader.ApplicaitonUser.Name;
+            ShoppingCartViewModel.OrderHeader.PhoneNumber = ShoppingCartViewModel.OrderHeader.ApplicaitonUser.PhoneNumber!;
+            ShoppingCartViewModel.OrderHeader.StreetAddress = ShoppingCartViewModel.OrderHeader.ApplicaitonUser.StreetAddress!;
+            ShoppingCartViewModel.OrderHeader.City = ShoppingCartViewModel.OrderHeader.ApplicaitonUser.City!;
+            ShoppingCartViewModel.OrderHeader.State = ShoppingCartViewModel.OrderHeader.ApplicaitonUser.State!;
+            ShoppingCartViewModel.OrderHeader.PostalCode = ShoppingCartViewModel.OrderHeader.ApplicaitonUser.PostalCode!;
+
+            foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+            {
+                cart.Price = GetPriceBasedOnQuantity(cart);
+                ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+            }
+
+            return View(ShoppingCartViewModel);
         }
 
         private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
