@@ -1,6 +1,7 @@
 ﻿using Ecommerce.DataAccess.IRepository;
 using Ecommerce.Models;
 using Ecommerce.Models.ViewModels;
+using Ecommerce.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -12,6 +13,7 @@ namespace EcommerceWeb.Areas.Customer.Controllers
     public class CartController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
+        [BindProperty]
         public required ShoppingCartViewModel ShoppingCartViewModel { get; set; }
         public CartController(IUnitOfWork unitOfWork)
         {
@@ -99,8 +101,61 @@ namespace EcommerceWeb.Areas.Customer.Controllers
 
             return View(ShoppingCartViewModel);
         }
+        [HttpPost]
+        [ActionName("Summary")]
+		public IActionResult SummaryPOST()
+		{
+			var claimsIdentity = (ClaimsIdentity)User.Identity!;
+			var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier)!.Value;
 
-        private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
+
+			ShoppingCartViewModel.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product");
+
+            ShoppingCartViewModel.OrderHeader.OrderDate = DateTime.UtcNow;
+            ShoppingCartViewModel.OrderHeader.ApplicaitonUserId = userId;
+
+			ShoppingCartViewModel.OrderHeader.ApplicaitonUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
+
+			foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+			{
+				cart.Price = GetPriceBasedOnQuantity(cart);
+				ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+			}
+
+            if (ShoppingCartViewModel.OrderHeader.ApplicaitonUser.CompanyId.GetValueOrDefault() == 0)
+            {
+                // It's a regular customer account and we need to capture payment
+                ShoppingCartViewModel.OrderHeader.PaymentStatus = StaticDetails.PaymentStatusPending;
+                ShoppingCartViewModel.OrderHeader.OrderStatus = StaticDetails.StatusPending;
+
+            }
+            else
+            {
+				// It's a company user
+				ShoppingCartViewModel.OrderHeader.PaymentStatus = StaticDetails.PaymentStatusDelayedPayment;
+				ShoppingCartViewModel.OrderHeader.OrderStatus = StaticDetails.StatusApproved;
+			}
+
+            _unitOfWork.OrderHeader.Add(ShoppingCartViewModel.OrderHeader);
+            _unitOfWork.Save();
+
+			foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+			{
+                var orderDetail = new OrderDetail()
+                {
+                    ProductId = cart.ProductId,
+                    OrderHeaderId = ShoppingCartViewModel.OrderHeader.Id,
+                    Price = cart.Price,
+                    Count = cart.Count
+                };
+                _unitOfWork.OrderDetail.Add(orderDetail);
+                _unitOfWork.Save();
+			}
+
+			return View(ShoppingCartViewModel);
+		}
+
+		private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
         {
             if (shoppingCart.Count <= 50)
                 return shoppingCart.Product.Price;
