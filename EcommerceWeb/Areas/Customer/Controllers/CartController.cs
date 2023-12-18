@@ -114,7 +114,7 @@ namespace EcommerceWeb.Areas.Customer.Controllers
             ShoppingCartViewModel.OrderHeader.OrderDate = DateTime.UtcNow;
             ShoppingCartViewModel.OrderHeader.ApplicaitonUserId = userId;
 
-			ShoppingCartViewModel.OrderHeader.ApplicaitonUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
+            ApplicationUser applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
 
 			foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
 			{
@@ -122,9 +122,9 @@ namespace EcommerceWeb.Areas.Customer.Controllers
 				ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
 			}
 
-            if (ShoppingCartViewModel.OrderHeader.ApplicaitonUser.CompanyId.GetValueOrDefault() == 0)
+            if (applicationUser.CompanyId.GetValueOrDefault() == 0)
             {
-                // It's a regular customer account and we need to capture payment
+                // It's a regular customer
                 ShoppingCartViewModel.OrderHeader.PaymentStatus = StaticDetails.PaymentStatusPending;
                 ShoppingCartViewModel.OrderHeader.OrderStatus = StaticDetails.StatusPending;
 
@@ -152,7 +152,18 @@ namespace EcommerceWeb.Areas.Customer.Controllers
                 _unitOfWork.Save();
 			}
 
-			return View(ShoppingCartViewModel);
+			if (applicationUser.CompanyId.GetValueOrDefault() == 0)
+			{
+				// It's a regular customer account and we need to capture payment
+				// Stripe Logic
+			}
+            
+			return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartViewModel.OrderHeader.Id });
+		}
+
+        public IActionResult OrderConfirmation(int id)
+        {
+			return View(id);
 		}
 
 		private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
