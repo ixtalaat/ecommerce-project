@@ -10,7 +10,7 @@ namespace Ecommerce.Models
         public string ApplicaitonUserId { get; set; } = null!;
         [ForeignKey("ApplicaitonUserId")]
         [ValidateNever]
-        public ApplicationUser ApplicaitonUser { get; set;} = null!;
+        public ApplicationUser ApplicationUser { get; set;} = null!;
 
         public DateTime OrderDate { get; set; }
         public DateTime ShippingDate { get; set; }
@@ -24,6 +24,7 @@ namespace Ecommerce.Models
         public DateTime PaymentDate { get; set; }
         public DateTime PaymentDueDate { get; set; }
 
+        public string? SessionId { get; set; }
         public string? PaymentIntentId { get; set; }
 
         [Required]
