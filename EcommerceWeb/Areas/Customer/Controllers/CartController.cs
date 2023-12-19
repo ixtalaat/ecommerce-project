@@ -4,6 +4,7 @@ using Ecommerce.Models.ViewModels;
 using Ecommerce.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stripe.Checkout;
 using System.Security.Claims;
 
 namespace EcommerceWeb.Areas.Customer.Controllers
@@ -103,24 +104,24 @@ namespace EcommerceWeb.Areas.Customer.Controllers
         }
         [HttpPost]
         [ActionName("Summary")]
-		public IActionResult SummaryPOST()
-		{
-			var claimsIdentity = (ClaimsIdentity)User.Identity!;
-			var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+        public IActionResult SummaryPOST()
+        {
+            var claimsIdentity = (ClaimsIdentity)User.Identity!;
+            var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier)!.Value;
 
 
-			ShoppingCartViewModel.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product");
+            ShoppingCartViewModel.ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product");
 
             ShoppingCartViewModel.OrderHeader.OrderDate = DateTime.UtcNow;
             ShoppingCartViewModel.OrderHeader.ApplicaitonUserId = userId;
 
             ApplicationUser applicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId);
 
-			foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
-			{
-				cart.Price = GetPriceBasedOnQuantity(cart);
-				ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
-			}
+            foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+            {
+                cart.Price = GetPriceBasedOnQuantity(cart);
+                ShoppingCartViewModel.OrderHeader.OrderTotal += (cart.Price * cart.Count);
+            }
 
             if (applicationUser.CompanyId.GetValueOrDefault() == 0)
             {
@@ -131,16 +132,16 @@ namespace EcommerceWeb.Areas.Customer.Controllers
             }
             else
             {
-				// It's a company user
-				ShoppingCartViewModel.OrderHeader.PaymentStatus = StaticDetails.PaymentStatusDelayedPayment;
-				ShoppingCartViewModel.OrderHeader.OrderStatus = StaticDetails.StatusApproved;
-			}
+                // It's a company user
+                ShoppingCartViewModel.OrderHeader.PaymentStatus = StaticDetails.PaymentStatusDelayedPayment;
+                ShoppingCartViewModel.OrderHeader.OrderStatus = StaticDetails.StatusApproved;
+            }
 
             _unitOfWork.OrderHeader.Add(ShoppingCartViewModel.OrderHeader);
             _unitOfWork.Save();
 
-			foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
-			{
+            foreach (var cart in ShoppingCartViewModel.ShoppingCartList)
+            {
                 var orderDetail = new OrderDetail()
                 {
                     ProductId = cart.ProductId,
@@ -150,23 +151,57 @@ namespace EcommerceWeb.Areas.Customer.Controllers
                 };
                 _unitOfWork.OrderDetail.Add(orderDetail);
                 _unitOfWork.Save();
-			}
+            }
 
-			if (applicationUser.CompanyId.GetValueOrDefault() == 0)
-			{
-				// It's a regular customer account and we need to capture payment
-				// Stripe Logic
-			}
-            
-			return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartViewModel.OrderHeader.Id });
-		}
+            if (applicationUser.CompanyId.GetValueOrDefault() == 0)
+            {
+                // It's a regular customer account and we need to capture payment
+                // Stripe Logic
+
+                var domain = "https://localhost:7058/";
+                var options = new SessionCreateOptions
+                {
+                    SuccessUrl = domain + $"customer/cart/orderconfirmation?id={ShoppingCartViewModel.OrderHeader.Id}",
+                    CancelUrl = domain + "customer/cart/index",
+                    LineItems = new List<SessionLineItemOptions>(),
+                    Mode = "payment",
+                };
+
+                foreach (var item in ShoppingCartViewModel.ShoppingCartList)
+                {
+                    var sessionLineItem = new SessionLineItemOptions()
+                    {
+                        PriceData = new SessionLineItemPriceDataOptions()
+                        {
+                            UnitAmount = (long)(item.Price * 100), // $20.50 => 2050
+                            Currency = "usd",
+                            ProductData = new SessionLineItemPriceDataProductDataOptions()
+                            {
+                                Name = item.Product.Title,
+                            }
+                        },
+                        Quantity = item.Count,
+                    };
+                    options.LineItems.Add(sessionLineItem);
+                }
+
+                var service = new SessionService();
+                Session session = service.Create(options);
+                _unitOfWork.OrderHeader.UpdateStripePaymentID(ShoppingCartViewModel.OrderHeader.Id, session.Id, session.PaymentIntentId);
+                _unitOfWork.Save();
+                Response.Headers.Add("Location", session.Url);
+                return new StatusCodeResult(303);
+            }
+
+            return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartViewModel.OrderHeader.Id });
+        }
 
         public IActionResult OrderConfirmation(int id)
         {
-			return View(id);
-		}
+            return View(id);
+        }
 
-		private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
+        private double GetPriceBasedOnQuantity(ShoppingCart shoppingCart)
         {
             if (shoppingCart.Count <= 50)
                 return shoppingCart.Product.Price;
