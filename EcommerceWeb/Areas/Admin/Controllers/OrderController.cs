@@ -1,5 +1,6 @@
 ﻿using Ecommerce.DataAccess.IRepository;
 using Ecommerce.Models;
+using Ecommerce.Models.ViewModels;
 using Ecommerce.Utility;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -20,6 +21,17 @@ namespace EcommerceWeb.Areas.Admin.Controllers
         {
             return View();
         }
+
+        public IActionResult Details(int orderId)
+        {
+            var orderViewModel = new OrderViewModel()
+            {
+                OrderHeader = _unitOfWork.OrderHeader.Get(u => u.Id == orderId, includeProperties: "ApplicationUser"),
+                OrderDetail = _unitOfWork.OrderDetail.GetAll(u => u.OrderHeaderId == orderId, includeProperties: "Product")
+            };
+            return View(orderViewModel);
+        }
+
         #region API CALLS
         [HttpGet]
         public IActionResult GetAll(string status)
