@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EcommerceWeb.Areas.Admin.Controllers
 {
+    [Area("Admin")]
     public class OrderController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -24,7 +25,6 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             List<OrderHeader> orderHeaders = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
             return Json(new { data = orderHeaders });
         }
-        [HttpDelete]
         #endregion
     }
 }
