@@ -52,7 +52,7 @@ namespace EcommerceWeb.Areas.Customer.Controllers
         }
         public IActionResult Minus(int cartId)
         {
-            var cartFromDb = _unitOfWork.ShoppingCart.Get(s => s.Id == cartId);
+            var cartFromDb = _unitOfWork.ShoppingCart.Get(s => s.Id == cartId, tracked: true);
             if (cartFromDb.Count <= 1)
             {
                 _unitOfWork.ShoppingCart.Remove(cartFromDb);
@@ -69,7 +69,7 @@ namespace EcommerceWeb.Areas.Customer.Controllers
         }
         public IActionResult Remove(int cartId)
         {
-            var cartFromDb = _unitOfWork.ShoppingCart.Get(s => s.Id == cartId);
+            var cartFromDb = _unitOfWork.ShoppingCart.Get(s => s.Id == cartId, tracked: true);
             _unitOfWork.ShoppingCart.Remove(cartFromDb);
             HttpContext.Session.SetInt32(StaticDetails.SessionCart,
                     _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == cartFromDb.ApplicationUserId).Count() - 1);
