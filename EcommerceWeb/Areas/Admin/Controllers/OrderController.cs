@@ -5,6 +5,7 @@ using Ecommerce.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
+using Stripe.Checkout;
 using System.Security.Claims;
 
 namespace EcommerceWeb.Areas.Admin.Controllers
@@ -119,6 +120,73 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             _unitOfWork.Save();
             TempData["Success"] = "Order Cancelled successfully.";
             return RedirectToAction(nameof(Details), new { orderId = OrderViewModel.OrderHeader.Id });
+        }
+
+        [ActionName("Details")]
+        [HttpPost]
+        public IActionResult Details_PAY_NOW()
+        {
+            OrderViewModel.OrderHeader = _unitOfWork.OrderHeader
+                .Get(u => u.Id == OrderViewModel.OrderHeader.Id, includeProperties: "ApplicationUser");
+            OrderViewModel.OrderDetail = _unitOfWork.OrderDetail
+                .GetAll(u => u.OrderHeaderId == OrderViewModel.OrderHeader.Id, includeProperties: "Product");
+
+            // Stripe Logic
+
+            var domain = "https://localhost:7058/";
+            var options = new SessionCreateOptions
+            {
+                SuccessUrl = domain + $"admin/order/paymentConfirmation?orderHeaderId={OrderViewModel.OrderHeader.Id}",
+                CancelUrl = domain + $"admin/order/details?orderId={OrderViewModel.OrderHeader.Id}",
+                LineItems = new List<SessionLineItemOptions>(),
+                Mode = "payment",
+            };
+
+            foreach (var item in OrderViewModel.OrderDetail)
+            {
+                var sessionLineItem = new SessionLineItemOptions()
+                {
+                    PriceData = new SessionLineItemPriceDataOptions()
+                    {
+                        UnitAmount = (long)(item.Price * 100), // $20.50 => 2050
+                        Currency = "usd",
+                        ProductData = new SessionLineItemPriceDataProductDataOptions()
+                        {
+                            Name = item.Product.Title,
+                        }
+                    },
+                    Quantity = item.Count,
+                };
+                options.LineItems.Add(sessionLineItem);
+            }
+
+            var service = new SessionService();
+            Session session = service.Create(options);
+            _unitOfWork.OrderHeader.UpdateStripePaymentID(OrderViewModel.OrderHeader.Id, session.Id, session.PaymentIntentId);
+            _unitOfWork.Save();
+            Response.Headers.Add("Location", session.Url);
+            return new StatusCodeResult(303);
+        }
+
+        public IActionResult PaymentConfirmation(int orderHeaderId)
+        {
+            OrderHeader orderHeader = _unitOfWork.OrderHeader.Get(u => u.Id == orderHeaderId);
+            if (orderHeader.PaymentStatus == StaticDetails.PaymentStatusDelayedPayment)
+            {
+                // This is an order by company
+
+                var service = new SessionService();
+                Session session = service.Get(orderHeader.SessionId);
+
+                if (session.PaymentStatus.ToLower() == "paid")
+                {
+                    _unitOfWork.OrderHeader.UpdateStripePaymentID(orderHeaderId, session.Id, session.PaymentIntentId);
+                    _unitOfWork.OrderHeader.UpdateStatus(orderHeaderId, orderHeader.OrderStatus!, StaticDetails.PaymentStatusApproved);
+                    _unitOfWork.Save();
+                }
+            }
+
+            return View(orderHeaderId);
         }
 
         #region API CALLS
