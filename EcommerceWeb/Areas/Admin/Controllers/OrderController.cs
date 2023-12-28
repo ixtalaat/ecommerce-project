@@ -4,6 +4,7 @@ using Ecommerce.Models.ViewModels;
 using Ecommerce.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Stripe;
 using System.Security.Claims;
 
 namespace EcommerceWeb.Areas.Admin.Controllers
@@ -90,6 +91,33 @@ namespace EcommerceWeb.Areas.Admin.Controllers
             _unitOfWork.OrderHeader.Update(orderHeader);
             _unitOfWork.Save();
             TempData["Success"] = "Order Shipped successfully.";
+            return RedirectToAction(nameof(Details), new { orderId = OrderViewModel.OrderHeader.Id });
+        }
+        [HttpPost]
+        [Authorize(Roles = StaticDetails.Role_Admin + "," + StaticDetails.Role_Employee)]
+        public IActionResult CancelOrder()
+        {
+            var orderHeader = _unitOfWork.OrderHeader.Get(u => u.Id == OrderViewModel.OrderHeader.Id);
+
+            if (orderHeader.PaymentStatus == StaticDetails.PaymentStatusApproved)
+            {
+                var options = new RefundCreateOptions
+                {
+                    Reason = RefundReasons.RequestedByCustomer,
+                    PaymentIntent = orderHeader.PaymentIntentId,
+                };
+
+                var service = new RefundService();
+                var refund = service.Create(options);
+                _unitOfWork.OrderHeader.UpdateStatus(orderHeader.Id, StaticDetails.StatusCancelled, StaticDetails.StatusRefunded);
+
+            } else
+            {
+                _unitOfWork.OrderHeader.UpdateStatus(orderHeader.Id, StaticDetails.StatusCancelled, StaticDetails.StatusCancelled);
+            }
+
+            _unitOfWork.Save();
+            TempData["Success"] = "Order Cancelled successfully.";
             return RedirectToAction(nameof(Details), new { orderId = OrderViewModel.OrderHeader.Id });
         }
 
