@@ -4,6 +4,7 @@ using Ecommerce.Models.ViewModels;
 using Ecommerce.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EcommerceWeb.Areas.Admin.Controllers
 {
@@ -12,7 +13,7 @@ namespace EcommerceWeb.Areas.Admin.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         [BindProperty]
-        public OrderViewModel OrderViewModel { get; set; }
+        public OrderViewModel OrderViewModel { get; set; } = null!;
         public OrderController(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
@@ -65,7 +66,19 @@ namespace EcommerceWeb.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAll(string status)
         {
-            IEnumerable<OrderHeader> orderHeaders = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser");
+            IEnumerable<OrderHeader> orderHeaders;
+
+            if (User.IsInRole(StaticDetails.Role_Admin) || User.IsInRole(StaticDetails.Role_Employee))
+            {
+                orderHeaders = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
+            }
+            else
+            {
+                var claimsIdentity = (ClaimsIdentity)User.Identity!;
+                var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier)!.Value;
+
+                orderHeaders = _unitOfWork.OrderHeader.GetAll(u => u.ApplicaitonUserId == userId, includeProperties: "ApplicationUser").ToList();
+            }
 
             switch (status)
             {
