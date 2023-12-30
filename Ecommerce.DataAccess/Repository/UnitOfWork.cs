@@ -8,6 +8,7 @@ namespace Ecommerce.DataAccess.Repository
         private readonly ApplicationDbContext _context;
         public ICategoryRepository Category { get; private set; }
         public IProductRepository Product { get; private set; }
+        public IProductImageRepository ProductImage { get; private set; }
         public ICompanyRepository Company { get; private set; }
         public IShoppingCartRepository ShoppingCart { get; private set; }
         public IApplicationUserRepository ApplicationUser { get; private set; }
@@ -19,6 +20,7 @@ namespace Ecommerce.DataAccess.Repository
             _context = context ?? throw new ArgumentNullException(nameof(context));
             Category = new CategoryRepository(context);
             Product = new ProductRepository(context);
+            ProductImage = new ProductImageRepository(context);
             Company = new CompanyRepository(context);
             ShoppingCart = new ShoppingCartRepository(context);
             ApplicationUser = new ApplicationUserRepository(context);

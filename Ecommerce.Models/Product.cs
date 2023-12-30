@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Ecommerce.Models
@@ -31,7 +32,8 @@ namespace Ecommerce.Models
         public double Price100 { get; set; }
         public int CategoryId { get; set; }
         [ForeignKey("CategoryId")]
-        public Category Category { get; set; } = null!;
-        public string ImageUrl { get; set; } = null!;
+        public Category? Category { get; set; }
+        [ValidateNever]
+        public List<ProductImage> ProductImages { get; set; } = null!; 
     }
 }

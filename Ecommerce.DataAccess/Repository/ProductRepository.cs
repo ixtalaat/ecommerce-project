@@ -26,10 +26,11 @@ namespace Ecommerce.DataAccess.Repository
                 objFromDb.Price100 = obj.Price100;
                 objFromDb.CategoryId = obj.CategoryId;
                 objFromDb.Author = obj.Author;
-                if (obj.ImageUrl is not null)
-                {
-                    objFromDb.ImageUrl = obj.ImageUrl;
-                }
+                objFromDb.ProductImages = obj.ProductImages;
+                //if (obj.ImageUrl is not null)
+                //{
+                //    objFromDb.ImageUrl = obj.ImageUrl;
+                //}
             }
         }
     }
